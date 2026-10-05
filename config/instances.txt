@@ -1,0 +1,3 @@
+db001.example.local
+db002.example.local
+db003.example.local

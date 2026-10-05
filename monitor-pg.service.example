@@ -1,0 +1,14 @@
+[Unit]
+Description=Monitor PostgreSQL Locks
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/monitor_pg
+EnvironmentFile=/opt/monitor_pg/.env
+ExecStart=/opt/monitor_pg/venv/bin/gunicorn --workers 1 --bind 127.0.0.1:8002 app:app
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="pt-BR"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Monitor PostgreSQL - Locks</title>
+<style>
+*{box-sizing:border-box}body{margin:0;background:#081018;color:#e8eef5;font-family:Segoe UI,Arial,sans-serif}
+main{max-width:1400px;margin:auto;padding:28px}.top{display:flex;justify-content:space-between;gap:20px;align-items:end;flex-wrap:wrap}
+h1{margin:0;font-size:28px}.muted{color:#8fa1b5}.cards{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin:24px 0}
+.card,.row{background:#101b27;border:1px solid #233447;border-radius:12px;padding:16px}.num{font-size:28px;font-weight:800}
+table{width:100%;border-collapse:collapse;background:#101b27;border-radius:12px;overflow:hidden}th,td{padding:12px;border-bottom:1px solid #233447;text-align:left;font-size:14px}
+.badge{padding:5px 9px;border-radius:999px;background:#243447;font-weight:700}.LOCK{background:#6a351a}.NORMAL{background:#173d2a}.TIMEOUT,.ERRO{background:#5b2028}
+pre{white-space:pre-wrap;max-width:520px}.detail{display:none;background:#0b141e}.click{cursor:pointer}
+@media(max-width:850px){.cards{grid-template-columns:repeat(2,1fr)}table{display:block;overflow:auto}}
+</style></head><body><main>
+<div class="top"><div><h1>Monitor de Locks PostgreSQL</h1><div class="muted">Monitoramento distribuído das instâncias</div></div>
+<div class="muted" id="times">Carregando...</div></div>
+<div class="cards">
+<div class="card"><div class="muted">Total</div><div class="num" id="total">0</div></div>
+<div class="card"><div class="muted">Normal</div><div class="num" id="normal">0</div></div>
+<div class="card"><div class="muted">Com lock</div><div class="num" id="lock">0</div></div>
+<div class="card"><div class="muted">Timeout</div><div class="num" id="timeout">0</div></div>
+<div class="card"><div class="muted">Erro</div><div class="num" id="erro">0</div></div></div>
+<table><thead><tr><th>Filial</th><th>Host</th><th>Status</th><th>Locks</th><th>Maior espera</th><th>Duração</th></tr></thead><tbody id="body"></tbody></table>
+</main><script>
+const esc=s=>String(s??'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+async function atualizar(){
+ try{
+  const r=await fetch('api/status'); const d=await r.json(); const s=d.resumo||{};
+  for(const k of ['total','normal','lock','timeout','erro']) document.getElementById(k).textContent=s[k]??0;
+  document.getElementById('times').textContent=`Última: ${d.ultima_atualizacao||'-'} | Próxima: ${d.proxima_atualizacao||'-'}`;
+  document.getElementById('body').innerHTML=(d.filiais||[]).map((x,i)=>{
+   const details=(x.locks||[]).map(l=>`<div class="row"><b>Bloqueado:</b> PID ${esc(l.blocked_pid)} (${esc(l.blocked_user)}) &nbsp; <b>Bloqueador:</b> PID ${esc(l.blocking_pid)} (${esc(l.blocking_user)})<br><b>Espera:</b> ${esc(l.waiting_time)}<pre>${esc(l.blocked_query)}</pre></div>`).join('');
+   return `<tr class="click" onclick="document.getElementById('d${i}').style.display=document.getElementById('d${i}').style.display==='table-row'?'none':'table-row'"><td>${esc(x.filial)}</td><td>${esc(x.host)}</td><td><span class="badge ${esc(x.status)}">${esc(x.status)}</span></td><td>${esc(x.quantidade_locks)}</td><td>${esc(x.maior_espera||'-')}</td><td>${esc(x.duracao)}s</td></tr><tr id="d${i}" class="detail"><td colspan="6">${details||esc(x.erro||'Sem locks.')}</td></tr>`;
+  }).join('');
+ }catch(e){document.getElementById('times').textContent='Falha ao atualizar painel: '+e}
+}
+atualizar(); setInterval(atualizar,15000);
+</script></body></html>
