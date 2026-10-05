@@ -37,7 +37,7 @@ LOG_FILE = OUTPUT_DIR / "monitor-execution.log"
 # CONFIGURAÇÃO POSTGRESQL
 # ============================================================
 
-DB_PORT = int(os.environ.get("PG_PORT", "5432"))
+DB_PORT = int(os.environ.get("PG_PORT", "xxxx"))
 DB_NAME = os.environ.get("PG_DATABASE", "SEU_BANCO")
 
 DB_USER = os.environ.get("PG_USER", "SEU_USUARIO")
@@ -81,6 +81,7 @@ resumo_cache = {
 # QUERY DE LOCKS
 # ============================================================
 
+#Essa QUERY é generica funciona em qualquer banco POSTGRESQL
 QUERY_LOCKS = """
 SELECT
     blocked.pid AS blocked_pid,
